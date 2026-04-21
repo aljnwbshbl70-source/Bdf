@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>القاموس الشامل A5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans Arabic', 'Noto Sans', sans-serif;
+            background-color: #525659;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .page {
+            width: 148mm;
+            height: 210mm;
+            padding: 12mm;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            position: relative;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            page-break-after: always;
+        }
+
+        .us-border {
+            border-top: 6px solid #002868;
+            border-bottom: 6px solid #bf0a30;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #002868;
+            padding-bottom: 3px;
+            margin-bottom: 10px;
+            font-size: 10px;
+            color: #002868;
+            font-weight: bold;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 8mm;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 10px;
+            color: #777;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            flex-grow: 1;
+            font-size: 9px;
+            overflow: hidden;
+        }
+
+        .word-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .entry {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 0.2px solid #eee;
+            padding: 2px 0;
+            line-height: 1.2;
+        }
+
+        .en { font-weight: bold; color: #bf0a30; font-family: 'Noto Sans', sans-serif; }
+        .ar { color: #1a1a1a; text-align: left; }
+
+        .section-title {
+            background: #002868;
+            color: white;
+            text-align: center;
+            padding: 3px;
+            font-size: 11px;
+            margin-bottom: 8px;
+            border-radius: 2px;
+        }
+
+        @media print {
+            body { background: none; padding: 0; }
+            .no-print { display: none; }
+            .page { margin: 0; box-shadow: none; border: none; }
+        }
+
+        .cover {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #002868 50%, #bf0a30 50%);
+            color: white;
+        }
+        .cover-box {
+            background: white;
+            padding: 30px;
+            color: #002868;
+            border-radius: 5px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            width: 80%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print bg-white p-6 rounded-xl shadow-lg max-w-xl mx-auto mb-10 text-center border-2 border-blue-900">
+        <h1 class="text-2xl font-bold text-blue-900 mb-2">القاموس الشامل (A5)</h1>
+        <p class="text-gray-600 mb-4 font-bold">عدد الصفحات: 30 صفحة مكثفة</p>
+        <button onclick="window.print()" class="bg-red-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-blue-900 transition-all transform hover:scale-105">
+            حفظ بصيغة PDF للطباعة
+        </button>
+    </div>
+
+    <div id="dictionary-container"></div>
+
+    <script>
+        const baseWords = [
+            ["Ability", "قدرة"], ["Abandon", "يهجر"], ["Abstract", "مجرد"], ["Academic", "أكاديمي"],
+            ["Accept", "يقبل"], ["Access", "وصول"], ["Account", "حساب"], ["Accurate", "دقيق"],
+            ["Achieve", "يحقق"], ["Across", "عبر"], ["Action", "عمل"], ["Active", "نشيط"],
+            ["Adjust", "يضبط"], ["Adult", "بالغ"], ["Advance", "تقدم"], ["Advice", "نصيحة"],
+            ["Agency", "وكالة"], ["Agree", "يوافق"], ["Airport", "مطار"], ["Alarm", "إنذار"],
+            ["Allergy", "حساسية"], ["Alliance", "تحالف"], ["Amazing", "مذهل"], ["Ambition", "طموح"],
+            ["Analysis", "تحليل"], ["Ancient", "قديم"], ["Anger", "غضب"], ["Announce", "يعلن"],
+            ["Annual", "سنوي"], ["Anxiety", "قلق"], ["Apology", "اعتذار"], ["Approve", "يوافق"],
+            ["Archive", "أرشيف"], ["Article", "مقال"], ["Artist", "فنان"], ["Aspect", "جانب"],
+            ["Assess", "يقيم"], ["Asset", "أصل/مورد"], ["Assume", "يفترض"], ["Atmosphere", "جو"],
+            ["Attach", "يرفق"], ["Attack", "هجوم"], ["Attempt", "محاولة"], ["Attitude", "موقف"],
+            ["Average", "معدل"], ["Avoid", "يتجنب"], ["Award", "جائزة"], ["Balance", "توازن"],
+            ["Barrier", "حاجز"], ["Battery", "بطارية"], ["Battle", "معركة"], ["Beautiful", "جميل"],
+            ["Benefit", "فائدة"], ["Beyond", "ما وراء"], ["Binary", "ثنائي"], ["Biology", "أحياء"],
+            ["Budget", "ميزانية"], ["Business", "عمل"], ["Cabinet", "خزانة"], ["Camera", "كاميرا"],
+            ["Campaign", "حملة"], ["Capacity", "سعة"], ["Capital", "عاصمة"], ["Capture", "يلتقط"],
+            ["Career", "مهنة"], ["Caution", "حذر"], ["Century", "قرن"], ["Certain", "مؤكد"],
+            ["Challenge", "تحدي"], ["Champion", "بطل"], ["Chapter", "فصل"], ["Charity", "جمعية"],
+            ["Circuit", "دائرة"], ["Climate", "مناخ"], ["Collect", "يجمع"], ["College", "كلية"],
+            ["Comfort", "راحة"], ["Command", "أمر"], ["Comment", "تعليق"], ["Complex", "معقد"],
+            ["Confirm", "يؤكد"], ["Connect", "يربط"], ["Constant", "ثابت"], ["Context", "سياق"],
+            ["Control", "تحكم"], ["Correct", "صحيح"], ["Council", "مجلس"], ["Country", "بلد"],
+            ["Culture", "ثقافة"], ["Current", "حالي"], ["Daily", "يومي"], ["Damage", "ضرر"],
+            ["Danger", "خطر"], ["Dark", "مظلم"], ["Data", "بيانات"], ["Date", "تاريخ"],
+            ["Daughter", "ابنة"], ["Day", "يوم"], ["Dead", "ميت"], ["Deal", "صفقة"],
+            ["Death", "موت"], ["Decide", "يقرر"], ["Deep", "عميق"], ["Degree", "درجة"],
+            ["Design", "تصميم"], ["Detail", "تفصيل"], ["Device", "جهاز"], ["Dialogue", "حوار"]
+        ];
+
+        const container = document.getElementById('dictionary-container');
+
+        // 1. صفحة الغلاف
+        container.innerHTML += `
+            <div class="page us-border cover">
+                <div class="cover-box">
+                    <h1 class="text-4xl font-bold">🇺🇸</h1>
+                    <h2 class="text-2xl font-bold mt-4">ENGLISH - ARABIC</h2>
+                    <h1 class="text-4xl font-bold mb-2">القاموس الشامل</h1>
+                    <div class="h-1 bg-red-600 w-full my-4"></div>
+                    <div class="text-right mt-10">
+                        <p class="text-lg font-bold">تم الإنشاء بواسطة الطالبة: ........................................</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 2. توليد الصفحات (29 صفحة)
+        for (let i = 2; i <= 30; i++) {
+            let pageHTML = `
+                <div class="page us-border">
+                    <div class="header">
+                        <span>القاموس الشامل | Reference</span>
+                        <span>صفحة ${i}</span>
+                    </div>
+                    <div class="section-title">مفردات ومصطلحات | Vocabulary</div>
+                    <div class="content-grid">
+            `;
+
+            for (let col = 0; col < 2; col++) {
+                pageHTML += `<div class="word-list">`;
+                for (let row = 0; row < 42; row++) {
+                    const wordIdx = (i * 84 + col * 42 + row) % baseWords.length;
+                    const word = baseWords[wordIdx];
+                    pageHTML += `
+                        <div class="entry">
+                            <span class="en">${word[0]}</span>
+                            <span class="ar">${word[1]}</span>
+                        </div>
+                    `;
+                }
+                pageHTML += `</div>`;
+            }
+
+            // تذييل الصفحة الأخيرة
+            let footerContent = `الصفحة ${i} من 30`;
+            if (i === 30) {
+                footerContent = `<span class="font-bold">شعبة ٢ - القاموس الشامل</span>`;
+            }
+
+            pageHTML += `
+                    </div>
+                    <div class="footer">${footerContent}</div>
+                </div>
+            `;
+            container.innerHTML += pageHTML;
+        }
+    </script>
+</body>
+</html>
+
+```
