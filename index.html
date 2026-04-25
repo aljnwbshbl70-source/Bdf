@@ -1,10 +1,14 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>القاموس الشامل A5 - نسخة مترجمة</title>
+    <title>القاموس الشامل المطور - خيارات التصدير</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- مكتبات التصدير -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=swap');
         
@@ -15,6 +19,7 @@
             padding: 20px;
         }
 
+        /* تنسيق الصفحة للطباعة والمعاينة */
         .page {
             width: 148mm;
             height: 210mm;
@@ -78,21 +83,11 @@
         }
 
         .en { font-weight: bold; color: #bf0a30; font-family: 'Noto Sans', sans-serif; }
-        .ar { 
-            color: #1a1a1a; 
-            text-align: left; 
-            flex-grow: 1;
-            margin-right: 10px;
-        }
+        .ar { color: #1a1a1a; text-align: left; flex-grow: 1; margin-right: 10px; }
 
         .section-title {
-            background: #002868;
-            color: white;
-            text-align: center;
-            padding: 3px;
-            font-size: 11px;
-            margin-bottom: 8px;
-            border-radius: 2px;
+            background: #002868; color: white; text-align: center;
+            padding: 3px; font-size: 11px; margin-bottom: 8px; border-radius: 2px;
         }
 
         @media print {
@@ -102,38 +97,56 @@
         }
 
         .cover {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; text-align: center;
             background: linear-gradient(135deg, #002868 50%, #bf0a30 50%);
             color: white;
         }
         .cover-box {
-            background: white;
-            padding: 30px;
-            color: #002868;
-            border-radius: 5px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            width: 80%;
+            background: white; padding: 30px; color: #002868;
+            border-radius: 5px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); width: 80%;
         }
+
+        .btn-action {
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+        .btn-action:hover { transform: translateY(-2px); }
     </style>
 </head>
 <body>
 
-    <div class="no-print bg-white p-6 rounded-xl shadow-lg max-w-xl mx-auto mb-10 text-center border-2 border-blue-900">
-        <h1 class="text-2xl font-bold text-blue-900 mb-2">القاموس الشامل (A5) - تم تحديث الترجمة</h1>
-        <p class="text-gray-600 mb-4 font-bold">تمت ترجمة جميع المصطلحات في العمود الثاني بنجاح.</p>
-        <button onclick="window.print()" class="bg-red-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-blue-900 transition-all transform hover:scale-105">
-            حفظ بصيغة PDF للطباعة
-        </button>
+    <!-- واجهة التحكم في التصدير -->
+    <div class="no-print bg-white p-8 rounded-2xl shadow-2xl max-w-2xl mx-auto mb-10 border-t-8 border-blue-900">
+        <h1 class="text-3xl font-extrabold text-blue-900 mb-2">نظام إدارة القاموس الشامل</h1>
+        <p class="text-gray-500 mb-6 italic">اختر صيغة الملف المناسبة لبدء عملية التصدير</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- زر PDF -->
+            <button onclick="window.print()" class="btn-action bg-red-600 text-white px-4 py-4 rounded-xl font-bold shadow-lg hover:bg-red-700">
+                <span>PDF للطباعة</span>
+            </button>
+            
+            <!-- زر Excel -->
+            <button onclick="exportToExcel()" class="btn-action bg-green-600 text-white px-4 py-4 rounded-xl font-bold shadow-lg hover:bg-green-700">
+                <span>Excel ملف</span>
+            </button>
+
+            <!-- زر Word -->
+            <button onclick="exportToWord()" class="btn-action bg-blue-700 text-white px-4 py-4 rounded-xl font-bold shadow-lg hover:bg-blue-800">
+                <span>Word مستند</span>
+            </button>
+        </div>
+        
+        <p class="mt-6 text-xs text-gray-400">ملاحظة: نسخة الـ PDF هي الوحيدة التي تحافظ على التصميم الفني المخصص للطباعة الورقية.</p>
     </div>
 
     <div id="dictionary-container"></div>
 
     <script>
-        // مصفوفة الكلمات مع الترجمة الدقيقة في العمود الثاني
         const baseWords = [
             ["Ability", "قدرة"], ["Abandon", "يهجر / يترك"], ["Abstract", "مجرد"], ["Academic", "أكاديمي"],
             ["Accept", "يقبل"], ["Access", "وصول / مدخل"], ["Account", "حساب"], ["Accurate", "دقيق"],
@@ -144,84 +157,108 @@
             ["Analysis", "تحليل"], ["Ancient", "قديم / عتيق"], ["Anger", "غضب"], ["Announce", "يعلن"],
             ["Annual", "سنوي"], ["Anxiety", "قلق"], ["Apology", "اعتذار"], ["Approve", "يوافق / يعتمد"],
             ["Archive", "أرشيف"], ["Article", "مقال"], ["Artist", "فنان"], ["Aspect", "جانب / مظهر"],
-            ["Assess", "يقيم"], ["Asset", "أصل / مورد"], ["Assume", "يفترض"], ["Atmosphere", "الغلاف الجوي / جو"],
-            ["Attach", "يرفق"], ["Attack", "هجوم / يهاجم"], ["Attempt", "محاولة"], ["Attitude", "موقف / سلوك"],
-            ["Average", "متوسط / معدل"], ["Avoid", "يتجنب"], ["Award", "جائزة"], ["Balance", "توازن"],
+            ["Assess", "يقيم"], ["Asset", "أصل / مورد"], ["Assume", "يفترض"], ["Atmosphere", "الغلاف الجوي"],
+            ["Attach", "يرفق"], ["Attack", "هجوم"], ["Attempt", "محاولة"], ["Attitude", "موقف / سلوك"],
+            ["Average", "متوسط"], ["Avoid", "يتجنب"], ["Award", "جائزة"], ["Balance", "توازن"],
             ["Barrier", "حاجز"], ["Battery", "بطارية"], ["Battle", "معركة"], ["Beautiful", "جميل"],
-            ["Benefit", "فائدة / مصلحة"], ["Beyond", "ما وراء / بعد"], ["Binary", "ثنائي"], ["Biology", "علم الأحياء"],
-            ["Budget", "ميزانية"], ["Business", "عمل / تجارة"], ["Cabinet", "خزانة / مجلس وزراء"], ["Camera", "كاميرا"],
-            ["Campaign", "حملة"], ["Capacity", "سعة / قدرة"], ["Capital", "عاصمة / رأس مال"], ["Capture", "يلتقط / يأسر"],
-            ["Career", "مهنة / سيرة مهنية"], ["Caution", "حذر / تنبيه"], ["Century", "قرن"], ["Certain", "مؤكد / محدد"],
-            ["Challenge", "تحدي"], ["Champion", "بطل"], ["Chapter", "فصل / باب"], ["Charity", "جمعية خيرية"],
+            ["Benefit", "فائدة"], ["Beyond", "ما وراء"], ["Binary", "ثنائي"], ["Biology", "أحياء"],
+            ["Budget", "ميزانية"], ["Business", "عمل / تجارة"], ["Cabinet", "خزانة"], ["Camera", "كاميرا"],
+            ["Campaign", "حملة"], ["Capacity", "سعة"], ["Capital", "عاصمة"], ["Capture", "يلتقط"],
+            ["Career", "مهنة"], ["Caution", "حذر"], ["Century", "قرن"], ["Certain", "مؤكد"],
+            ["Challenge", "تحدي"], ["Champion", "بطل"], ["Chapter", "فصل"], ["Charity", "جمعية خيرية"],
             ["Circuit", "دائرة"], ["Climate", "مناخ"], ["Collect", "يجمع"], ["College", "كلية"],
-            ["Comfort", "راحة"], ["Command", "أمر / قيادة"], ["Comment", "تعليق"], ["Complex", "معقد"],
-            ["Confirm", "يؤكد"], ["Connect", "يربط"], ["Constant", "ثابت / مستمر"], ["Context", "سياق"],
-            ["Control", "تحكم / رقابة"], ["Correct", "صحيح / يصحح"], ["Council", "مجلس"], ["Country", "بلد / ريف"],
-            ["Culture", "ثقافة"], ["Current", "حالي / تيار"], ["Daily", "يومي"], ["Damage", "ضرر / يتلف"],
-            ["Danger", "خطر"], ["Dark", "مظلم / غامق"], ["Data", "بيانات"], ["Date", "تاريخ / موعد"],
-            ["Daughter", "ابنة"], ["Day", "يوم"], ["Dead", "ميت"], ["Deal", "صفقة / يتعامل"],
-            ["Death", "موت"], ["Decide", "يقرر"], ["Deep", "عميق"], ["Degree", "درجة / شهادة"],
-            ["Design", "تصميم"], ["Detail", "تفصيل"], ["Device", "جهاز / أداة"], ["Dialogue", "حوار"]
+            ["Comfort", "راحة"], ["Command", "أمر"], ["Comment", "تعليق"], ["Complex", "معقد"],
+            ["Confirm", "يؤكد"], ["Connect", "يربط"], ["Constant", "ثابت"], ["Context", "سياق"],
+            ["Control", "تحكم"], ["Correct", "صحيح"], ["Council", "مجلس"], ["Country", "بلد"],
+            ["Culture", "ثقافة"], ["Current", "حالي"], ["Daily", "يومي"], ["Damage", "ضرر"],
+            ["Danger", "خطر"], ["Dark", "مظلم"], ["Data", "بيانات"], ["Date", "تاريخ"],
+            ["Daughter", "ابنة"], ["Day", "يوم"], ["Dead", "ميت"], ["Deal", "صفقة"],
+            ["Death", "موت"], ["Decide", "يقرر"], ["Deep", "عميق"], ["Degree", "درجة"],
+            ["Design", "تصميم"], ["Detail", "تفصيل"], ["Device", "جهاز"], ["Dialogue", "حوار"]
         ];
 
         const container = document.getElementById('dictionary-container');
 
-        // 1. صفحة الغلاف
-        container.innerHTML += `
-            <div class="page us-border cover">
-                <div class="cover-box">
-                    <h1 class="text-4xl font-bold">🇺🇸</h1>
-                    <h2 class="text-2xl font-bold mt-4">ENGLISH - ARABIC</h2>
-                    <h1 class="text-4xl font-bold mb-2">القاموس الشامل</h1>
-                    <div class="h-1 bg-red-600 w-full my-4"></div>
-                    <div class="text-right mt-10">
-                        <p class="text-lg font-bold">تم الإنشاء بواسطة الطالبة: ........................................</p>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // 2. توليد الصفحات (29 صفحة إضافية)
-        for (let i = 2; i <= 30; i++) {
-            let pageHTML = `
-                <div class="page us-border">
-                    <div class="header">
-                        <span>القاموس الشامل | Reference</span>
-                        <span>صفحة ${i}</span>
-                    </div>
-                    <div class="section-title">مفردات ومصطلحات | Vocabulary</div>
-                    <div class="content-grid">
-            `;
-
-            for (let col = 0; col < 2; col++) {
-                pageHTML += `<div class="word-list">`;
-                for (let row = 0; row < 42; row++) {
-                    const wordIdx = ((i - 1) * 84 + col * 42 + row) % baseWords.length;
-                    const word = baseWords[wordIdx];
-                    pageHTML += `
-                        <div class="entry">
-                            <span class="en">${word[0]}</span>
-                            <span class="ar">${word[1]}</span>
+        // إنشاء محتوى القاموس للعرض والمعاينة
+        function generateUI() {
+            container.innerHTML = `
+                <div class="page us-border cover">
+                    <div class="cover-box">
+                        <h1 class="text-4xl font-bold">🇺🇸</h1>
+                        <h2 class="text-2xl font-bold mt-4">ENGLISH - ARABIC</h2>
+                        <h1 class="text-4xl font-bold mb-2">القاموس الشامل</h1>
+                        <div class="h-1 bg-red-600 w-full my-4"></div>
+                        <div class="text-right mt-10">
+                            <p class="text-lg font-bold">تم الإنشاء بواسطة الطالبة: ........................................</p>
                         </div>
-                    `;
-                }
-                pageHTML += `</div>`;
-            }
-
-            let footerContent = `الصفحة ${i} من 30`;
-            if (i === 30) {
-                footerContent = `<span class="font-bold">شعبة ٢ - القاموس الشامل المحدث</span>`;
-            }
-
-            pageHTML += `
                     </div>
-                    <div class="footer">${footerContent}</div>
                 </div>
             `;
-            container.innerHTML += pageHTML;
+
+            for (let i = 2; i <= 30; i++) {
+                let pageHTML = `
+                    <div class="page us-border">
+                        <div class="header">
+                            <span>القاموس الشامل | Reference</span>
+                            <span>صفحة ${i}</span>
+                        </div>
+                        <div class="section-title">مفردات ومصطلحات | Vocabulary</div>
+                        <div class="content-grid">
+                `;
+
+                for (let col = 0; col < 2; col++) {
+                    pageHTML += `<div class="word-list">`;
+                    for (let row = 0; row < 42; row++) {
+                        const wordIdx = ((i - 1) * 84 + col * 42 + row) % baseWords.length;
+                        const word = baseWords[wordIdx];
+                        pageHTML += `
+                            <div class="entry">
+                                <span class="en">${word[0]}</span>
+                                <span class="ar">${word[1]}</span>
+                            </div>
+                        `;
+                    }
+                    pageHTML += `</div>`;
+                }
+
+                pageHTML += `
+                        </div>
+                        <div class="footer">الصفحة ${i} من 30</div>
+                    </div>
+                `;
+                container.innerHTML += pageHTML;
+            }
         }
+
+        // وظيفة تصدير Excel
+        function exportToExcel() {
+            let data = [["English Word", "الترجمة العربية"]];
+            // تجميع كافة الكلمات المستخدمة في الـ 30 صفحة
+            for (let i = 1; i <= 30 * 84; i++) {
+                const word = baseWords[i % baseWords.length];
+                data.push([word[0], word[1]]);
+            }
+            const worksheet = XLSX.utils.aoa_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "القاموس");
+            XLSX.writeFile(workbook, "القاموس_الشامل.xlsx");
+        }
+
+        // وظيفة تصدير Word
+        function exportToWord() {
+            let content = "القاموس الشامل - إنجليزي عربي\n\n";
+            for (let i = 0; i < 30 * 84; i++) {
+                const word = baseWords[i % baseWords.length];
+                content += `${word[0]} : ${word[1]}\n`;
+            }
+            const blob = new Blob([content], { type: "application/msword;charset=utf-8" });
+            saveAs(blob, "القاموس_الشامل.doc");
+        }
+
+        // التشغيل عند التحميل
+        window.onload = generateUI;
     </script>
 </body>
 </html>
 
-```
+
